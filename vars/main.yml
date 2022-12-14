@@ -1,0 +1,8 @@
+---
+vnc_ports:
+  - 5901
+vnc_group: vncusers
+vnc_users:
+  - user: vmcuser
+    display_id: :1
+    vnc_passwd: "changeme"

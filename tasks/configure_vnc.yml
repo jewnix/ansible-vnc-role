@@ -1,0 +1,69 @@
+---
+- name: Create VNC group
+  ansible.builtin.group:
+    name: "{{ vnc_group | default(vnc_group) }}"
+    state: present
+  become: True
+
+- name: Create VNC users
+  ansible.builtin.user:
+    name: "{{ item.user }}"
+    group: "{{ vnc_group | default(vnc_group) }}"
+    state: present
+    home: "/home/{{ item.user }}"
+    shell: /bin/bash
+  become: True
+  loop: "{{ vnc_users }}"
+
+- name: Add VNC users to vncserver.users
+  community.general.ini_file:
+    path: /etc/tigervnc/vncserver.users
+    section: ""
+    option: "{{ item.display_id }}"
+    value: "{{ item.user }}"
+    no_extra_spaces: True
+  become: True
+  loop: "{{ vnc_users }}"
+
+- name: Create .vnc directory for VNC user
+  ansible.builtin.file:
+    path: "/home/{{ item.user }}/.vnc"
+    state: directory
+    mode: 0755
+    owner: "{{ item.user }}"
+    group: "{{ item.vnc_group | default(vnc_group) }}"
+  loop: "{{ vnc_users }}"
+
+- name: Check for vncpasswd file
+  ansible.builtin.stat:
+    path: "/home/{{ item.user }}/.vnc/passwd"
+  register: vncpasswd_found
+  become: True
+  with_items: "{{ vnc_users }}"
+
+- name: Configure User password
+  ansible.builtin.shell: |
+    echo {{ item.1.vnc_passwd }} | vncpasswd -f > /home/{{ item.1.user }}/.vnc/passwd
+  args:
+    executable: /bin/bash
+    creates: /home/{{ item.1.user }}/.vnc/passwd
+  become: True
+  with_together: 
+    - "{{ vncpasswd_found.results }}"
+    - "{{ vnc_users }}"
+  when: not item.0.stat.exists
+
+- name: Set correct permissions for VNC passwd file
+  ansible.builtin.file:
+    path: "/home/{{ item.user }}/.vnc/passwd"
+    owner: "{{ item.user }}"
+    group: "{{ item.vnc_group | default(vnc_group) }}"
+    mode: 0600
+  loop: "{{ vnc_users }}"
+
+- name: Start VNC servers
+  ansible.builtin.service:
+    name: "vncserver@{{ item.display_id }}"
+    state: started
+    enabled: True
+  loop: "{{ vnc_users }}"

@@ -1,0 +1,13 @@
+---
+- name: Install Packages
+  include_tasks: install_packages.yml
+
+- name: Configure firewall
+  include_tasks: configure_firewall.yml
+  when: enable_firewalld == True
+
+- name: Configure OS 
+  include_tasks: configure_os.yml
+
+- name: Configure VNC
+  include_tasks: configure_vnc.yml
