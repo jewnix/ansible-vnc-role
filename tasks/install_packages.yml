@@ -1,0 +1,36 @@
+---
+- name: Install Workstation Group
+  ansible.builtin.package:
+    name: 
+      - "@workstation-product-environment"
+      - epel-release
+    state: present
+  become: True
+
+- block:
+  - name: Copy Google repo file
+    ansible.builtin.copy:
+      src: google-chrome.repo
+      dest: /etc/yum.repos.d/google-chrome.repo
+      owner: root
+      group: root
+      mode: "0644"
+    become: True
+
+  - name: Install Google Chrome
+    ansible.builtin.package:
+      name: 
+        - google-chrome-stable
+      state: present
+    become: True
+  when: 
+    - install_chrome == True
+    - ansible_distribution == "RedaHat"
+
+- name: Install additional packages
+  ansible.builtin.package:
+    name: "{{ additional_packages }}"
+    state: present
+  become: True
+  when: install_utilities == True
+

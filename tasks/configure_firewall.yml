@@ -1,0 +1,31 @@
+---
+- name: Ensure firewalld is installed
+  ansible.builtin.yum:
+    name: firewalld
+    state: present
+  become: True
+
+- name: Ensure firewalld service is enabled
+  ansible.builtin.service:
+    name: "firewalld"
+    state: started
+  become: True
+
+- name: Make sure SSH is allowd
+  ansible.posix.firewalld:
+    zone: "{{ firewalld_zone }}"
+    service: "ssh"
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  become: True
+
+- name: Enable VNC ports in firewalld
+  ansible.posix.firewalld:
+    zone: "{{ firewalld_zone }}"
+    port: "{{ item }}/tcp"
+    permanent: yes
+    state: enabled
+  loop: "{{ vnc_ports }}"
+  notify: Reload firewalld
+  become: True

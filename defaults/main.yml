@@ -1,0 +1,13 @@
+---
+firewalld_zone: public
+enable_firewalld: True
+install_utilities: True
+install_chrome: False
+additional_packages:
+  - htop
+  - tigervnc-server
+  - libreoffice-calc
+  - libreoffice-writer
+  - fail2ban
+  - telnet
+  - gnome-tweaks

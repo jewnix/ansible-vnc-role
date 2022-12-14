@@ -1,0 +1,9 @@
+---
+- name: Allaow package refresh for users
+  ansible.builtin.copy:
+    src: repos.pkla
+    dest: /etc/polkit-1/localauthority/50-local.d/repos.pkla
+    owner: root
+    group: root
+    mode: '0644'
+  become: True
